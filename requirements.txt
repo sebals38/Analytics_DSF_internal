@@ -1,4 +1,1 @@
-streamlit
-pandas
-numpy
-io
+streamlit==1.37.1
