@@ -79,18 +79,21 @@ if uploaded_file is not None:
                     # 인덱스를 맞춰서 join
                     final_data_rows = fact_data_rows.reset_index(drop=True).join(anal_df_val.reset_index(drop=True), how='right').join(anal_df_vol.reset_index(drop=True), how='right').join(anal_df_unitprice.reset_index(drop=True), how='right')
                 
-                scope = st.radio("분석할 단계를 선택하세요", ["market", "manufacturer", "manufacturer/segment", "brand", "subbrand"])
+                scope = st.radio("분석할 단계를 선택하세요", ["market", "manufacturer", "manufacturer/segment", "manufacturer/brand", "subbrand"])
 
-                if scope == "market":
-                    ## total market : 예) 3번째 컬럼부터 7번째 컬럼까지 (인덱스 2부터 6까지) 선택
-                    cols_to_check = final_data_rows.columns[2:7]
+                ## total market : 예) 3번째 컬럼부터 7번째 컬럼까지 (인덱스 2부터 6까지) 선택
+                cols_to_check = final_data_rows.columns[2:7]
 
-                    # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
-                    nan_condition = final_data_rows[cols_to_check].isnull().all(axis=1)
-                    market_df = final_data_rows[nan_condition]
+                # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
+                nan_condition = final_data_rows[cols_to_check].isnull().all(axis=1)
+                market_df = final_data_rows[nan_condition]
 
+
+                if scope == "market":                    
                     analyzed_monthly_market_df = monthly_performances(market_df)
+                    analyzed_monthly_market_df.columns = ["market"]
                     analyzed_3monthly_market_df = three_monthly_performances(market_df)
+                    analyzed_3monthly_market_df.columns = ["market"]
                 elif scope == "manufacturer":
                     cols_to_check = final_data_rows.columns[3:7]
                     # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
@@ -107,12 +110,24 @@ if uploaded_file is not None:
                     three_monthly_result_df = causal_analysis(all_manufacturer_df, timestamp=2)
 
                     monthly_cause_diagnosis = monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, latest_mo, month_ago)
-
                     three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo)
                     
+                    analyzed_monthly_market_df = monthly_performances(market_df)
+                    analyzed_monthly_market_df.columns = ["market"]
+                    analyzed_3monthly_market_df = three_monthly_performances(market_df)
+                    analyzed_3monthly_market_df.columns = ["market"]
                     analyzed_monthly_manufacturer_df = monthly_performances(manufacturer_df)
-
+                    analyzed_monthly_manufacturer_df.columns = ["manufacturer"]
                     analyzed_3monthly_manufacturer_df = three_monthly_performances(manufacturer_df)
+                    analyzed_3monthly_manufacturer_df.columns = ["manufacturer"]
+                                        
+                    analyzed_monthly_market_manufacturer_df = pd.merge(
+                        analyzed_monthly_market_df, analyzed_monthly_manufacturer_df, on=analyzed_monthly_market_df.index)
+                    analyzed_monthly_market_manufacturer_df = analyzed_monthly_market_manufacturer_df.rename(columns={'key_0':'features'})
+                    
+                    analyzed_3monthly_market_manufacturer_df = pd.merge(
+                        analyzed_3monthly_market_df, analyzed_3monthly_manufacturer_df, on=analyzed_3monthly_market_df.index)
+                    analyzed_3monthly_market_manufacturer_df = analyzed_3monthly_market_manufacturer_df.rename(columns={'key_0':'features'})
 
                 elif scope == "manufacturer/segment":
                     cols_to_check = final_data_rows.columns[4:7]
@@ -130,9 +145,23 @@ if uploaded_file is not None:
                     segment_df = manufacturer_df[manufacturer_df["TYPE"]==selected_segment]
                     
                     st.write(f"선택된 세그먼트: {selected_segment}")
-
+                    
+                    analyzed_monthly_market_df = monthly_performances(market_df)
+                    analyzed_monthly_market_df.columns = ["market"]
+                    analyzed_3monthly_market_df = three_monthly_performances(market_df)
+                    analyzed_3monthly_market_df.columns = ["market"]
                     analyzed_monthly_segment_df = monthly_performances(segment_df)
+                    analyzed_monthly_segment_df.columns = ["segment"]
                     analyzed_3monthly_segment_df = three_monthly_performances(segment_df)
+                    analyzed_3monthly_segment_df.columns = ["segment"]
+                                        
+                    analyzed_monthly_market_segment_df = pd.merge(
+                        analyzed_monthly_market_df, analyzed_monthly_segment_df, on=analyzed_monthly_market_df.index)
+                    analyzed_monthly_market_segment_df = analyzed_monthly_market_segment_df.rename(columns={'key_0':'features'})
+                    
+                    analyzed_3monthly_market_segment_df = pd.merge(
+                        analyzed_3monthly_market_df, analyzed_3monthly_segment_df, on=analyzed_3monthly_market_df.index)
+                    analyzed_3monthly_market_segment_df = analyzed_3monthly_market_segment_df.rename(columns={'key_0':'features'})
                 # elif scope == "segment":
                 #     segment_desc = "SEGMENTC"
                 #     cols_to_check = final_data_rows.columns[3:7]
@@ -148,7 +177,7 @@ if uploaded_file is not None:
 
                 #     analyzed_monthly_segment_df = monthly_performances(segment_df)
                 #     analyzed_3monthly_segment_df = three_monthly_performances(segment_df)
-                elif scope == "brand":
+                elif scope == "manufacturer/brand":
                     cols_to_check = final_data_rows.columns[5:7]
                     # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
                     nan_condition = final_data_rows[cols_to_check].isnull().all(axis=1)
@@ -165,8 +194,23 @@ if uploaded_file is not None:
 
                     brand_rows_temp = manufacturer_df[manufacturer_df["BRAND"] == selected_brand]
                     brand_df = brand_rows_temp[brand_rows_temp["SUBBRAND"].isna()]
+
+                    analyzed_monthly_market_df = monthly_performances(market_df)
+                    analyzed_monthly_market_df.columns = ["market"]
+                    analyzed_3monthly_market_df = three_monthly_performances(market_df)
+                    analyzed_3monthly_market_df.columns = ["market"]
                     analyzed_monthly_brand_df = monthly_performances(brand_df)
+                    analyzed_monthly_brand_df.columns = ["brand"]
                     analyzed_3monthly_brand_df = three_monthly_performances(brand_df)
+                    analyzed_3monthly_brand_df.columns = ["brand"]
+                                        
+                    analyzed_monthly_market_brand_df = pd.merge(
+                        analyzed_monthly_market_df, analyzed_monthly_brand_df, on=analyzed_monthly_market_df.index)
+                    analyzed_monthly_market_brand_df = analyzed_monthly_market_brand_df.rename(columns={'key_0':'features'})
+                    
+                    analyzed_3monthly_market_brand_df = pd.merge(
+                        analyzed_3monthly_market_df, analyzed_3monthly_brand_df, on=analyzed_3monthly_market_df.index)
+                    analyzed_3monthly_market_brand_df = analyzed_3monthly_market_brand_df.rename(columns={'key_0':'features'})
                 elif scope == "subbrand":
                     cols_to_check = final_data_rows.columns[6:7]
                     # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
@@ -190,9 +234,23 @@ if uploaded_file is not None:
                     
                     subbrand_rows_temp = brand_rows_temp[brand_rows_temp["SUBBRAND"] == selected_subbrand]
                     subbrand_df = subbrand_rows_temp[subbrand_rows_temp["ITEM"].isna()]
+                    analyzed_monthly_market_df = monthly_performances(market_df)
+                    analyzed_monthly_market_df.columns = ["market"]
+                    analyzed_3monthly_market_df = three_monthly_performances(market_df)
+                    analyzed_3monthly_market_df.columns = ["market"]
                     analyzed_monthly_subbrand_df = monthly_performances(subbrand_df)
+                    analyzed_monthly_subbrand_df.columns = ["subbrand"]
                     analyzed_3monthly_subbrand_df = three_monthly_performances(subbrand_df)
-                
+                    analyzed_3monthly_subbrand_df.columns = ["subbrand"]
+                                        
+                    analyzed_monthly_market_subbrand_df = pd.merge(
+                        analyzed_monthly_market_df, analyzed_monthly_subbrand_df, on=analyzed_monthly_market_df.index)
+                    analyzed_monthly_market_subbrand_df = analyzed_monthly_market_subbrand_df.rename(columns={'key_0':'features'})
+                    
+                    analyzed_3monthly_market_subbrand_df = pd.merge(
+                        analyzed_3monthly_market_df, analyzed_3monthly_subbrand_df, on=analyzed_3monthly_market_df.index)
+                    analyzed_3monthly_market_subbrand_df = analyzed_3monthly_market_subbrand_df.rename(columns={'key_0':'features'})
+                     
                 st.write("")
                 st.write("===========================================================================")        
                 st.write("")
@@ -208,34 +266,34 @@ if uploaded_file is not None:
                     st.write("raw data")
                     st.dataframe(manufacturer_df)
                     st.write("key monthly performances")
-                    st.dataframe(analyzed_monthly_manufacturer_df)
+                    st.dataframe(analyzed_monthly_market_manufacturer_df)
                     st.write("key 3-monthly performances")
-                    st.dataframe(analyzed_3monthly_manufacturer_df)
+                    st.dataframe(analyzed_3monthly_market_manufacturer_df)
                     st.write("monthly_causal_diagnosis")
                     st.dataframe(monthly_cause_diagnosis)
                     st.write("3monthly_causal_diagnosis")
-                    st.dataframe(three_monthly_cause_diagnosis)
+                    st.dataframe(three_monthly_cause_diagnosis) 
                 elif scope == "manufacturer/segment":
                     st.write("raw data")
-                    st.dataframe(segment_df)                    
+                    st.dataframe(manufacturer_df)                    
                     st.write("key monthly performances")
-                    st.dataframe(analyzed_monthly_segment_df)
+                    st.dataframe(analyzed_monthly_market_segment_df)
                     st.write("key 3-monthly performances")
-                    st.dataframe(analyzed_3monthly_segment_df)
-                elif scope == "brand":
+                    st.dataframe(analyzed_3monthly_market_segment_df)
+                elif scope == "manufacturer/brand":
                     st.write("raw data")
                     st.dataframe(brand_df)
                     st.write("key monthly performances")
-                    st.dataframe(analyzed_monthly_brand_df)
+                    st.dataframe(analyzed_monthly_market_brand_df)
                     st.write("key 3-monthly performances")
-                    st.dataframe(analyzed_3monthly_brand_df) 
+                    st.dataframe(analyzed_3monthly_market_brand_df) 
                 elif scope == "subbrand":
                     st.write("raw data")
                     st.dataframe(subbrand_df)                    
                     st.write("key monthly performances")
-                    st.dataframe(analyzed_monthly_subbrand_df)
+                    st.dataframe(analyzed_monthly_market_subbrand_df)
                     st.write("key 3-monthly performances")
-                    st.dataframe(analyzed_3monthly_subbrand_df) 
+                    st.dataframe(analyzed_3monthly_market_subbrand_df) 
             else:
                 st.warning("최종 분석 결과를 생성할 데이터가 부족합니다.")
         elif uploaded_file is not None:
