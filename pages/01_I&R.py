@@ -1,58 +1,13 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import io, os
-import sqlite3
+import io
 from pages.func.base_func import  *
 
 # DataFrame 출력 형식 설정: float 형식의 소수점 자리를 1로 제한
 pd.options.display.float_format = '{:.1f}'.format
 
 st.title("I&R - Nielsen Discover Data Analysis")
-
-def generate_df_to_analyze(uploaded_df):
-    """
-    업로드된 DataFrame을 분석에 사용할 형태로 가공하는 함수 (예시).
-    실제 데이터 분석 로직에 따라 구현해야 합니다.
-    """
-    # 예시: 처음 5개 행만 반환
-    return uploaded_df.head()
-
-def save_df_to_db(df, db_name="uploaded_data.db", table_name="analyzed_data", db_folder="db", fill_value=0):
-    """
-    DataFrame을 SQLite 데이터베이스의 지정된 폴더에 저장합니다.
-    """
-    try:
-        # 데이터베이스 폴더가 없으면 생성
-        os.makedirs(db_folder, exist_ok=True)
-        db_path = os.path.join(db_folder, db_name)
-        conn = sqlite3.connect(db_path)
-        df = df.replace({None:np.nan})
-        df = df.fillna(fill_value)  # NaN 값을 fill_value로 채우기
-        df.to_sql(table_name, conn, if_exists='replace', index=False)
-        conn.commit()
-        conn.close()
-        st.success(f"DataFrame을 '{db_path}' 데이터베이스의 '{table_name}' 테이블에 저장했습니다.")
-        return True
-    except Exception as e:
-        st.error(f"데이터베이스 저장 중 오류 발생: {e}")
-        return False
-
-def load_df_from_db(db_name="uploaded_data.db", table_name="analyzed_data", db_folder="db"):
-    """
-    SQLite 데이터베이스의 지정된 폴더에서 DataFrame을 불러옵니다.
-    """
-    try:
-        db_path = os.path.join(db_folder, db_name)
-        conn = sqlite3.connect(db_path)
-        query = f"SELECT * FROM {table_name}"
-        loaded_df = pd.read_sql(query, conn)
-        conn.close()
-        st.success(f"'{db_path}' 데이터베이스의 '{table_name}' 테이블에서 데이터를 불러왔습니다.")
-        return loaded_df
-    except Exception as e:
-        st.error(f"데이터베이스 로드 중 오류 발생: {e}")
-        return None
 
 with st.sidebar:
     uploaded_file = st.file_uploader("CSV 또는 Excel 파일 업로드", type=["csv", "xlsx"])
@@ -69,31 +24,7 @@ if uploaded_file is not None:
             st.success("DATA 파일 로드 완료!")
 
         # 데이터 분석 함수 호출
-        df_analyzed = generate_df_to_analyze(uploaded_df)
-        st.subheader("분석 결과 (일부):")
-        st.dataframe(df_analyzed)
-
-        db_folder_name = "db"  # 저장할 폴더 이름
-        fill_na_value = 0
-
-        # 데이터베이스 저장
-        if st.button("분석 결과 저장"):
-            if save_df_to_db(df_analyzed, db_folder=db_folder_name, fill_value=fill_na_value):
-                st.info(f"데이터가 '{db_folder_name}' 폴더에 저장되었습니다. 아래 버튼을 눌러 불러올 수 있습니다.")
-
-        # 데이터베이스에서 불러오기
-        if st.button("저장된 데이터 불러오기"):
-            df = load_df_from_db(db_folder=db_folder_name)
-            if df is not None:
-                st.subheader("불러온 데이터:")
-                st.dataframe(df)
-
-    # except Exception as e:
-    #     st.error(f"파일 처리 중 오류가 발생했습니다: {e}")
-
-        # 불러온 데이터에서 NaN 값을 처리 (저장 시 채우지 않았다면)
-        df = df.replace({np.nan: 0}).copy() # 예시: NaN을 0으로 채움
-        # 또는 df = loaded_df.dropna().copy() # NaN 값을 포함하는 행 제거
+        df = generate_df_to_analyze(uploaded_df)
 
         # 원 데이터프레임 컬럼 분할
         fact_columns = [col for col in df.columns if 'Unnamed' in col]
@@ -106,8 +37,8 @@ if uploaded_file is not None:
         fact_data_rows.columns = col_fact
 
         intermediate_df_val = intermediate_df(df, value_columns)
-        intermediate_df_vol = intermediate_df(df, volume_columns)   
-        
+        intermediate_df_vol = intermediate_df(df, volume_columns)
+
         latest_mo = intermediate_df_val.columns[-1][-6:]
         month_ago = intermediate_df_val.columns[-2][-6:]
         latest_mo_yag = intermediate_df_val.columns[-13][-6:]
@@ -147,17 +78,16 @@ if uploaded_file is not None:
                 else:
                     # 인덱스를 맞춰서 join
                     final_data_rows = fact_data_rows.reset_index(drop=True).join(anal_df_val.reset_index(drop=True), how='right').join(anal_df_vol.reset_index(drop=True), how='right').join(anal_df_unitprice.reset_index(drop=True), how='right')
-
+                
                 scope = st.radio("분석할 단계를 선택하세요", ["market", "segment", "manufacturer", "brand", "subbrand"])
 
                 ## total market : 예) 3번째 컬럼부터 7번째 컬럼까지 (인덱스 2부터 6까지) 선택
                 cols_to_check = final_data_rows.columns[2:7]
 
                 # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
-                # nan_condition = final_data_rows[cols_to_check].isnull().all(axis=0)  
-                nan_condition = (final_data_rows[cols_to_check] == 0).all(axis=1)         
+                nan_condition = final_data_rows[cols_to_check].isnull().all(axis=1)
                 market_df = final_data_rows[nan_condition]
-                st.write("market_df:", market_df) # 확인
+
 
                 if scope == "market":                    
                     analyzed_monthly_market_df = monthly_performances(market_df)
@@ -249,6 +179,11 @@ if uploaded_file is not None:
 
                     brand_rows_temp = final_data_rows[final_data_rows["BRAND"].str.contains(selected_brand, na=False)]
                     brand_df = brand_rows_temp[brand_rows_temp["SUBBRAND"].isna()]
+
+                    segment_list = brand_df["SEGMENTC"].dropna().unique().tolist()                    
+                    selected_segment = st.selectbox("분석할 세그먼트를 선택하세요.", sorted(segment_list))
+
+                    brand_df = brand_df[brand_df["SEGMENTC"]==selected_segment]
 
                     analyzed_monthly_market_df = monthly_performances(market_df)
                     analyzed_monthly_market_df.columns = ["market"]
