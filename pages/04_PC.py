@@ -79,7 +79,7 @@ if uploaded_file is not None:
                     # 인덱스를 맞춰서 join
                     final_data_rows = fact_data_rows.reset_index(drop=True).join(anal_df_val.reset_index(drop=True), how='right').join(anal_df_vol.reset_index(drop=True), how='right').join(anal_df_unitprice.reset_index(drop=True), how='right')
                 
-                scope = st.radio("분석할 단계를 선택하세요", ["market", "manufacturer", "manufacturer/segment", "manufacturer/brand", "subbrand"])
+                scope = st.radio("분석할 단계를 선택하세요", ["market", "manufacturer", "manufacturer/segment", "manufacturer/brand", "manufacturer/subbrand"])
 
                 ## total market : 예) 3번째 컬럼부터 7번째 컬럼까지 (인덱스 2부터 6까지) 선택
                 cols_to_check = final_data_rows.columns[2:7]
@@ -182,17 +182,26 @@ if uploaded_file is not None:
                     # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
                     nan_condition = final_data_rows[cols_to_check].isnull().all(axis=1)
 
-                    manufacturer_list = final_data_rows["MANUFACTURER"].dropna().unique().tolist()                    
+                    manufacturer_list = final_data_rows["MANUFACTURER"].dropna().unique().tolist()
                     selected_manufacturer = st.selectbox("분석할 제조사를 선택하세요.", sorted(manufacturer_list))
 
                     manufacturer_df = final_data_rows[(nan_condition&~final_data_rows.iloc[:,2].isnull()) & (final_data_rows["MANUFACTURER"]==selected_manufacturer)]
+                    
+                    segment_list = manufacturer_df["TYPE"].dropna().unique().tolist()                    
+                    selected_segment = st.selectbox("분석할 세그먼트를 선택하세요.", sorted(segment_list))
 
-                    brand_list = manufacturer_df["BRAND"].dropna().unique().tolist()
+                    segment_df = manufacturer_df[manufacturer_df["TYPE"]==selected_segment]
+                    
+                    st.write(f"선택된 세그먼트: {selected_segment}")
+
+                    brand_list = segment_df["BRAND"].dropna().unique().tolist()
                     
                     selected_brand = st.selectbox("분석할 브랜드를 선택하세요.", sorted(brand_list))
                     st.write(f"선택된 브랜드: {selected_brand}")
 
-                    brand_rows_temp = manufacturer_df[manufacturer_df["BRAND"] == selected_brand]
+                    brand_rows_temp = segment_df[segment_df["BRAND"] == selected_brand]
+                    
+                    # st.write("check_point!!!", manufacturer_list)
                     brand_df = brand_rows_temp[brand_rows_temp["SUBBRAND"].isna()]
 
                     analyzed_monthly_market_df = monthly_performances(market_df)
@@ -211,7 +220,7 @@ if uploaded_file is not None:
                     analyzed_3monthly_market_brand_df = pd.merge(
                         analyzed_3monthly_market_df, analyzed_3monthly_brand_df, on=analyzed_3monthly_market_df.index)
                     analyzed_3monthly_market_brand_df = analyzed_3monthly_market_brand_df.rename(columns={'key_0':'features'})
-                elif scope == "subbrand":
+                elif scope == "manufacturer/subbrand":
                     cols_to_check = final_data_rows.columns[6:7]
                     # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
                     nan_condition = final_data_rows[cols_to_check].isnull().all(axis=1)
@@ -220,13 +229,20 @@ if uploaded_file is not None:
                     selected_manufacturer = st.selectbox("분석할 제조사를 선택하세요.", sorted(manufacturer_list))
 
                     manufacturer_df = final_data_rows[(nan_condition&~final_data_rows.iloc[:,2].isnull()) & (final_data_rows["MANUFACTURER"]==selected_manufacturer)]
-
-                    brand_list = manufacturer_df["BRAND"].dropna().unique().tolist()
                     
+                    segment_list = manufacturer_df["TYPE"].dropna().unique().tolist()                    
+                    selected_segment = st.selectbox("분석할 세그먼트를 선택하세요.", sorted(segment_list))
+
+                    segment_df = manufacturer_df[manufacturer_df["TYPE"]==selected_segment]
+                    
+                    st.write(f"선택된 세그먼트: {selected_segment}")
+
+                    brand_list = segment_df["BRAND"].dropna().unique().tolist()
+
                     selected_brand = st.selectbox("분석할 브랜드를 선택하세요.", sorted(brand_list))
                     st.write(f"선택된 브랜드: {selected_brand}")
 
-                    brand_rows_temp = manufacturer_df[manufacturer_df["BRAND"] == selected_brand]
+                    brand_rows_temp = segment_df[segment_df["BRAND"] == selected_brand]
 
                     subbrand_list = brand_rows_temp[brand_rows_temp["ITEM"].isna()]["SUBBRAND"].dropna().unique().tolist()
                     selected_subbrand = st.selectbox("분석할 서브브랜드를 선택하세요.", sorted(subbrand_list))
@@ -287,7 +303,7 @@ if uploaded_file is not None:
                     st.dataframe(analyzed_monthly_market_brand_df)
                     st.write("key 3-monthly performances")
                     st.dataframe(analyzed_3monthly_market_brand_df) 
-                elif scope == "subbrand":
+                elif scope == "manufacturer/subbrand":
                     st.write("raw data")
                     st.dataframe(subbrand_df)                    
                     st.write("key monthly performances")
