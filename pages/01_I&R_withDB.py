@@ -381,7 +381,8 @@ if st.session_state["uploaded_df"] is not None:
             st.warning("물량 또는 금액 관련 분석 데이터를 생성할 수 없습니다. 컬럼명을 확인해주세요.")
             
 # 데이터베이스에서 불러오기
-if st.button("저장된 데이터 불러오기", disabled=not st.session_state["data_saved"]): # 저장된 경우에만 활성화
+# if st.button("저장된 데이터 불러오기", disabled=not st.session_state["data_saved"]): # 저장된 경우에만 활성화
+if st.button("저장된 데이터 불러오기"): # 저장된 경우에만 활성화
     load_df_from_db(db_folder=db_folder_name)
 
 if st.session_state["final_data_rows_loaded"] is not None:
