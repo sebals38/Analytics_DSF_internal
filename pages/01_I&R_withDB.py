@@ -167,7 +167,7 @@ if st.session_state["final_data_rows"] is not None:
     cols_to_check = st.session_state["final_data_rows"].columns[2:7]
     st.session_state["final_data_rows"] = st.session_state["final_data_rows"].replace({"0": np.nan, 0: np.nan, '': np.nan, ' ': np.nan}).copy() # NaN을 0으로 채움
 
-    nan_condition = st.session_state["final_data_rows"][st.session_state["final_data_rows"].columns[2:7]].isnull().all(axis=1)
+    nan_condition = st.session_state["final_data_rows"][cols_to_check].isnull().all(axis=1)
     market_df = st.session_state["final_data_rows"][nan_condition].copy()
 
     if st.session_state["scope"] == "market":
@@ -185,7 +185,7 @@ if st.session_state["final_data_rows"] is not None:
         selected_segment = st.selectbox("분석할 세그먼트를 선택하세요.", sorted(segment_list))
 
         segment_df = st.session_state["final_data_rows"][(nan_condition&~st.session_state["final_data_rows"].iloc[:,2].isnull()) & (st.session_state["final_data_rows"][segment_desc]==selected_segment)]
-        
+
         st.write(f"선택된 브랜드: {selected_segment}")
 
         analyzed_monthly_market_df = monthly_performances(market_df)
