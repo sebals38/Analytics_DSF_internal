@@ -63,8 +63,9 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload CSV or Excel file to analyze", type=["csv", "xlsx"])
     db_folder_name = "db"  # 저장할 폴더 이름
     if st.button("저장된 데이터 불러오기"): # 저장된 경우에만 활성화
-        st.session_state["final_data_rows"] = load_df_from_db(db_folder=db_folder_name)
-        st.write(st.session_state["final_data_rows"])
+        st.session_state["uploaded_df"] = load_df_from_db(db_name="I&R.db", db_folder=db_folder_name)
+        df = st.session_state["uploaded_df"].copy()
+        df = df.replace({np.nan: 0}).copy() # NaN을 0으로 채움
 
     elif uploaded_file is not None:
         try:
@@ -93,13 +94,15 @@ with st.sidebar:
 
     # 데이터베이스 저장
     if st.button("분석 결과 저장"):
-        if save_df_to_db(st.session_state["final_data_rows"].copy(), db_folder=db_folder_name, fill_value=fill_na_value):
+        if save_df_to_db(st.session_state["uploaded_df"].copy(), db_name="I&R.db", db_folder=db_folder_name, fill_value=fill_na_value):
             st.info(f"데이터가 '{db_folder_name}' 폴더에 저장되었습니다. 아래 버튼을 눌러 불러올 수 있습니다.")
 
+if "uploaded_df" in st.session_state:
     # 원 데이터프레임 컬럼 분할
     fact_columns = [col for col in df.columns if 'Unnamed' in col]
     value_columns = [col for col in df.columns if 'Value' in col]
     volume_columns = [col for col in df.columns if 'KG' in col]
+
 
     fact_data_rows, val_data_rows, vol_data_rows = generate_columns(df, fact_columns, value_columns, volume_columns)
 
@@ -234,7 +237,6 @@ if st.session_state["final_data_rows"] is not None:
             three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo)
 
             analyzed_monthly_market_df = monthly_performances(market_df)
-            st.write("check_point!!!", analyzed_monthly_market_df)
             analyzed_monthly_market_df.columns = ["market"]
             analyzed_3monthly_market_df = three_monthly_performances(market_df)
             analyzed_3monthly_market_df.columns = ["market"]
