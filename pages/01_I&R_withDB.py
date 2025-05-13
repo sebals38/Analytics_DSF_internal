@@ -234,6 +234,7 @@ if st.session_state["final_data_rows"] is not None:
             three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo)
 
             analyzed_monthly_market_df = monthly_performances(market_df)
+            st.write("check_point!!!", analyzed_monthly_market_df)
             analyzed_monthly_market_df.columns = ["market"]
             analyzed_3monthly_market_df = three_monthly_performances(market_df)
             analyzed_3monthly_market_df.columns = ["market"]
