@@ -59,66 +59,6 @@ if "scope" not in st.session_state:
 if "data_saved" not in st.session_state:
     st.session_state["data_saved"] = False
 
-# # 세션 상태 초기화 (앱 처음 실행 시)
-# if "uploaded_df" not in st.session_state:
-#     st.session_state["uploaded_df"] = None
-# if "data_loaded_from" not in st.session_state:
-#     st.session_state["data_loaded_from"] = None
-
-# with st.sidebar:
-#     uploaded_file = st.file_uploader("Upload CSV or Excel file to analyze", type=["csv", "xlsx"])
-#     if uploaded_file is not None:
-#         try:
-#             file_extension = uploaded_file.name.split('.')[-1].lower()
-#             if file_extension == "csv":
-#                 st.session_state["uploaded_df"] = pd.read_csv(uploaded_file, skiprows=8, index_col=False, encoding="utf-8")
-#                 st.success("DATA file loading complete from upload!")
-#             elif file_extension == "xlsx":
-#                 st.session_state["uploaded_df"] = pd.read_excel(uploaded_file, skiprows=8, index_col=False)
-#                 st.success("DATA file loading complete from upload!")
-#             else:
-#                 st.info("Upload CSV or Excel file to analyze.")
-#             st.session_state["uploaded_file"] = uploaded_file # 파일 객체 저장
-#             st.session_state["data_loaded_from"] = "uploaded" # 업로드로 로드됨을 표시
-
-#         except pd.errors.ParserError as e:
-#             st.error(f"CSV file parsing error: {e}")
-#         except Exception as e:
-#             st.error(f"Error occurred: {e}")
-#         st.write("check_point!!!", st.session_state["uploaded_df"])
-
-#     db_folder_name = "db"  # 저장할 폴더 이름
-#     if st.button("저장된 데이터 불러오기"): # 저장된 경우에만 활성화
-#         st.session_state["uploaded_df"] = load_df_from_db(db_folder=db_folder_name)
-#         st.session_state["data_loaded_from"] = "saved" # 저장된 데이터로 로드됨을 표시
-#         st.success("DATA file loading complete from saved data!")
-
-# if st.session_state["uploaded_df"] is not None:
-#     df = st.session_state["uploaded_df"].copy()
-#     df = df.replace({np.nan: 0}).copy() # NaN을 0으로 채움
-
-#     # 데이터 로딩 방식에 따라 다른 코드 실행
-#     if st.session_state["data_loaded_from"] == "uploaded":
-#         st.subheader("Data loaded from uploaded file:")
-#         st.dataframe(df.head())
-#         # 업로드된 데이터에 대한 추가 처리 로직
-#         st.write("Performing operations on uploaded data...")
-#         # 예시: 특정 컬럼 분석
-#         if 'some_column' in df.columns:
-#             st.write(f"Mean of 'some_column': {df['some_column'].mean()}")
-
-#     elif st.session_state["data_loaded_from"] == "saved":
-#         st.subheader("Data loaded from saved data:")
-#         st.dataframe(df.head())
-#         # 저장된 데이터에 대한 추가 처리 로직
-#         st.write("Performing operations on saved data...")
-#         # 예시: 다른 종류의 분석
-#         st.write("Shape of the loaded dataframe:", df.shape)
-
-#     else:
-#         st.info("No data loaded yet. Please upload a file or load saved data.")
-
-
 with st.sidebar:
     uploaded_file = st.file_uploader("Upload CSV or Excel file to analyze", type=["csv", "xlsx"])
     db_folder_name = "db"  # 저장할 폴더 이름
@@ -142,84 +82,91 @@ with st.sidebar:
             if st.session_state["uploaded_df"] is not None:
                 df = st.session_state["uploaded_df"].copy()
                 df = df.replace({np.nan: 0}).copy() # NaN을 0으로 채움
-
-                # 원 데이터프레임 컬럼 분할
-                fact_columns = [col for col in df.columns if 'Unnamed' in col]
-                value_columns = [col for col in df.columns if 'Value' in col]
-                volume_columns = [col for col in df.columns if 'KG' in col]
-
-                fact_data_rows, val_data_rows, vol_data_rows = generate_columns(df, fact_columns, value_columns, volume_columns)
-
-                col_fact = df[fact_columns].iloc[0].tolist()
-                if fact_data_rows is not None and len(fact_data_rows.columns) == len(col_fact):
-                    fact_data_rows.columns = col_fact
-
-                intermediate_df_val = intermediate_df(df, value_columns)
-                intermediate_df_vol = intermediate_df(df, volume_columns)
-
-                latest_mo = intermediate_df_val.columns[-1][-6:] if not intermediate_df_val.empty else ""
-                month_ago = intermediate_df_val.columns[-2][-6:] if len(intermediate_df_val.columns) >= 2 else ""
-                latest_mo_yag = intermediate_df_val.columns[-13][-6:] if len(intermediate_df_val.columns) >= 13 else ""
-
-                latest_3mo = intermediate_df_val.columns[-1][-6:] if not intermediate_df_val.empty else ""
-                previous_3mo = intermediate_df_val.columns[-4][-6:] if len(intermediate_df_val.columns) >= 4 else ""
-
-                # 예시: 'Feb 25'를 입력받아 volume 월별 인덱스 찾기
-                target_month = st.text_input(f"분석 기준 월을 입력하세요 (예: {latest_mo})", f"{latest_mo}")
-                st.write(f"target_month 초기값: {target_month}")
-
-                target_indices_vol = find_month_index(intermediate_df_vol, target_month)
-                anal_df_vol = anal_df(intermediate_df_vol, target_indices_vol)
-
-                target_indices_val = find_month_index(intermediate_df_val, target_month)
-                anal_df_val = anal_df(intermediate_df_val, target_indices_val)
-
-                if not anal_df_vol.empty and not anal_df_val.empty:
-                    # 컬럼 개수 확인 후 join
-                    min_cols = min(len(anal_df_vol.columns), 7)
-                    vol_subset = anal_df_vol.iloc[:, :min_cols].copy()
-                    val_subset = anal_df_val.iloc[:, :min_cols].copy()
-                    vol_val_df = vol_subset.join(val_subset, how='left', lsuffix='_vol', rsuffix='_val')
-
-                    price_columns_base = vol_val_df.columns[:min_cols]
-                    price_columns = [col.replace('volume', 'price').replace('_vol', '') for col in price_columns_base]
-
-                    anal_df_unitprice = unitprice_df(vol_val_df.copy(), price_columns)
-
-                    # final_data_rows 생성 시 데이터프레임들이 비어있지 않은지 확인
-                    if not fact_data_rows.empty and not anal_df_val.empty and not anal_df_vol.empty and not anal_df_unitprice.empty:
-                        # 조인 시 인덱스 맞춰주기 (fact_data_rows에 인덱스가 없다면 무시)
-                        if fact_data_rows.index.inferred_type != 'integer':
-                            final_data_rows = fact_data_rows.join(anal_df_val, how='right').join(anal_df_vol, how='right').join(anal_df_unitprice, how='right')
-                            st.session_state["final_data_rows"] = final_data_rows
-                            # st.write("final_data_rows 컬럼 (초기 생성):", final_data_rows.columns.tolist())
-                        else:
-                            # 인덱스를 맞춰서 join
-                            final_data_rows = fact_data_rows.reset_index(drop=True).join(anal_df_val.reset_index(drop=True), how='right').join(anal_df_vol.reset_index(drop=True), how='right').join(anal_df_unitprice.reset_index(drop=True), how='right')
-                            st.session_state["final_data_rows"] = final_data_rows
-                            # st.write("final_data_rows 컬럼 (초기 생성, 인덱스 reset):", final_data_rows.columns.tolist())
-                        
-                        st.session_state["final_data_rows"] = generate_df_to_analyze(st.session_state["final_data_rows"])
-
-                        # if st.session_state["df_analyzed"] is None:
-                        #     st.session_state["df_analyzed"] = generate_df_to_analyze(st.session_state["final_data_rows"].copy()) # 복사본 사용
-
-                        # st.subheader("분석 결과 (일부):")
-                        # st.dataframe(st.session_state["df_analyzed"].head())
-
-                        # db_folder_name = "db"  # 저장할 폴더 이름
-                        fill_na_value = 0
-
-                        # 데이터베이스 저장
-                        if st.button("분석 결과 저장"):
-                            if save_df_to_db(st.session_state["final_data_rows"].copy(), db_folder=db_folder_name, fill_value=fill_na_value):
-                                st.info(f"데이터가 '{db_folder_name}' 폴더에 저장되었습니다. 아래 버튼을 눌러 불러올 수 있습니다.")
-
+            
+                # db_folder_name = "db"  # 저장할 폴더 이름
+                fill_na_value = 0
+        
         except pd.errors.ParserError as e:
             st.error(f"CSV file parsing error: {e}")
         except Exception as e:
             st.error(f"Error occurred: {e}")
 
+    # 데이터베이스 저장
+    if st.button("분석 결과 저장"):
+        if save_df_to_db(st.session_state["final_data_rows"].copy(), db_folder=db_folder_name, fill_value=fill_na_value):
+            st.info(f"데이터가 '{db_folder_name}' 폴더에 저장되었습니다. 아래 버튼을 눌러 불러올 수 있습니다.")
+
+    # 원 데이터프레임 컬럼 분할
+    fact_columns = [col for col in df.columns if 'Unnamed' in col]
+    value_columns = [col for col in df.columns if 'Value' in col]
+    volume_columns = [col for col in df.columns if 'KG' in col]
+
+    fact_data_rows, val_data_rows, vol_data_rows = generate_columns(df, fact_columns, value_columns, volume_columns)
+
+    col_fact = df[fact_columns].iloc[0].tolist()
+    if fact_data_rows is not None and len(fact_data_rows.columns) == len(col_fact):
+        fact_data_rows.columns = col_fact
+
+    intermediate_df_val = intermediate_df(df, value_columns)
+    intermediate_df_vol = intermediate_df(df, volume_columns)
+
+    latest_mo = intermediate_df_val.columns[-1][-6:] if not intermediate_df_val.empty else ""
+    month_ago = intermediate_df_val.columns[-2][-6:] if len(intermediate_df_val.columns) >= 2 else ""
+    latest_mo_yag = intermediate_df_val.columns[-13][-6:] if len(intermediate_df_val.columns) >= 13 else ""
+
+    latest_3mo = intermediate_df_val.columns[-1][-6:] if not intermediate_df_val.empty else ""
+    previous_3mo = intermediate_df_val.columns[-4][-6:] if len(intermediate_df_val.columns) >= 4 else ""
+
+    # 예시: 'Feb 25'를 입력받아 volume 월별 인덱스 찾기
+    target_month = st.text_input(f"분석 기준 월을 입력하세요 (예: {latest_mo})", f"{latest_mo}")
+    st.write(f"target_month 초기값: {target_month}")
+
+    target_indices_vol = find_month_index(intermediate_df_vol, target_month)
+    anal_df_vol = anal_df(intermediate_df_vol, target_indices_vol)
+
+    target_indices_val = find_month_index(intermediate_df_val, target_month)
+    anal_df_val = anal_df(intermediate_df_val, target_indices_val)
+
+    if not anal_df_vol.empty and not anal_df_val.empty:
+        # 컬럼 개수 확인 후 join
+        min_cols = min(len(anal_df_vol.columns), 7)
+        vol_subset = anal_df_vol.iloc[:, :min_cols].copy()
+        val_subset = anal_df_val.iloc[:, :min_cols].copy()
+        vol_val_df = vol_subset.join(val_subset, how='left', lsuffix='_vol', rsuffix='_val')
+
+        price_columns_base = vol_val_df.columns[:min_cols]
+        price_columns = [col.replace('volume', 'price').replace('_vol', '') for col in price_columns_base]
+
+        anal_df_unitprice = unitprice_df(vol_val_df.copy(), price_columns)
+
+        # final_data_rows 생성 시 데이터프레임들이 비어있지 않은지 확인
+        if not fact_data_rows.empty and not anal_df_val.empty and not anal_df_vol.empty and not anal_df_unitprice.empty:
+            # 조인 시 인덱스 맞춰주기 (fact_data_rows에 인덱스가 없다면 무시)
+            if fact_data_rows.index.inferred_type != 'integer':
+                final_data_rows = fact_data_rows.join(anal_df_val, how='right').join(anal_df_vol, how='right').join(anal_df_unitprice, how='right')
+                st.session_state["final_data_rows"] = final_data_rows
+                # st.write("final_data_rows 컬럼 (초기 생성):", final_data_rows.columns.tolist())
+            else:
+                # 인덱스를 맞춰서 join
+                final_data_rows = fact_data_rows.reset_index(drop=True).join(anal_df_val.reset_index(drop=True), how='right').join(anal_df_vol.reset_index(drop=True), how='right').join(anal_df_unitprice.reset_index(drop=True), how='right')
+                st.session_state["final_data_rows"] = final_data_rows
+                # st.write("final_data_rows 컬럼 (초기 생성, 인덱스 reset):", final_data_rows.columns.tolist())
+            
+            st.session_state["final_data_rows"] = generate_df_to_analyze(st.session_state["final_data_rows"])
+
+            # if st.session_state["df_analyzed"] is None:
+            #     st.session_ state["df_analyzed"] = generate_df_to_analyze(st.session_state["final_data_rows"].copy()) # 복사본 사용
+
+            # st.subheader("분석 결과 (일부):")
+            # st.dataframe(st.session_state["df_analyzed"].head())
+
+            # # db_folder_name = "db"  # 저장할 폴더 이름
+            # fill_na_value = 0
+
+            # # 데이터베이스 저장
+            # if st.button("분석 결과 저장"):
+            #     if save_df_to_db(st.session_state["final_data_rows"].copy(), db_folder=db_folder_name, fill_value=fill_na_value):
+            #         st.info(f"데이터가 '{db_folder_name}' 폴더에 저장되었습니다. 아래 버튼을 눌러 불러올 수 있습니다.")
     
 if st.session_state["final_data_rows"] is not None:
 
