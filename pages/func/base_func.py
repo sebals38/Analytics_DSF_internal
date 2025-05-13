@@ -8,6 +8,7 @@ pd.options.display.float_format = '{:.1f}'.format
 
 def generate_df_to_analyze(df):
     """활성영역 (마지막 row) 검출하여 활용대상 데이터프레임 생성"""
+    df = df.replace({"0": 0, np.nan:0, '': 0, ' ': 0}).copy() # NaN을 0으로 채움
     space_index = None
     for index, value in enumerate(df.iloc[:, 0]):
         # if pd.isna(value):
