@@ -78,26 +78,27 @@ with st.sidebar:
                 st.success("DATA file loading complete!")
             else:
                 st.info("Upload CSV or Excel file to analyze.")
-            st.session_state["uploaded_file"] = uploaded_file # 파일 객체 저장
+            # st.session_state["uploaded_file"] = uploaded_file # 파일 객체 저장
+
+            # db_folder_name = "db"  # 저장할 폴더 이름
+            fill_na_value = 0
+            # 데이터베이스 저장
+            if st.button("분석 결과 저장"):
+                if save_df_to_db(st.session_state["uploaded_df"].copy(), db_name="I&R.db", db_folder=db_folder_name, fill_value=fill_na_value):
+                    st.info(f"데이터가 '{db_folder_name}' 폴더에 저장되었습니다. 아래 버튼을 눌러 불러올 수 있습니다.")
 
             if st.session_state["uploaded_df"] is not None:
                 df = st.session_state["uploaded_df"].copy()
                 df = df.replace({np.nan: 0}).copy() # NaN을 0으로 채움
-            
-                # db_folder_name = "db"  # 저장할 폴더 이름
-                fill_na_value = 0
         
         except pd.errors.ParserError as e:
             st.error(f"CSV file parsing error: {e}")
         except Exception as e:
             st.error(f"Error occurred: {e}")
 
-    # 데이터베이스 저장
-    if st.button("분석 결과 저장"):
-        if save_df_to_db(st.session_state["uploaded_df"].copy(), db_name="I&R.db", db_folder=db_folder_name, fill_value=fill_na_value):
-            st.info(f"데이터가 '{db_folder_name}' 폴더에 저장되었습니다. 아래 버튼을 눌러 불러올 수 있습니다.")
 
-if "uploaded_df" in st.session_state:
+# if "uploaded_df" in st.session_state:
+if st.session_state["uploaded_df"] is not None:
     # 원 데이터프레임 컬럼 분할
     fact_columns = [col for col in df.columns if 'Unnamed' in col]
     value_columns = [col for col in df.columns if 'Value' in col]
