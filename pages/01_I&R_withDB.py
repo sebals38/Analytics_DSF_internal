@@ -124,6 +124,7 @@ with st.sidebar:
     db_folder_name = "db"  # 저장할 폴더 이름
     if st.button("저장된 데이터 불러오기"): # 저장된 경우에만 활성화
         st.session_state["final_data_rows"] = load_df_from_db(db_folder=db_folder_name)
+        st.write(st.session_state["final_data_rows"])
 
     elif uploaded_file is not None:
         try:
@@ -155,7 +156,6 @@ with st.sidebar:
 
                 intermediate_df_val = intermediate_df(df, value_columns)
                 intermediate_df_vol = intermediate_df(df, volume_columns)
-
 
                 latest_mo = intermediate_df_val.columns[-1][-6:] if not intermediate_df_val.empty else ""
                 month_ago = intermediate_df_val.columns[-2][-6:] if len(intermediate_df_val.columns) >= 2 else ""
