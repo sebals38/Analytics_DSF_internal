@@ -80,13 +80,16 @@ if uploaded_file is not None:
                 
                 scope = st.radio("분석할 단계를 선택하세요", ["market", "manufacturer", "manufacturer/segment", "manufacturer/brand", "subbrand"])
 
-                
                 ## total market : 예) 3번째 컬럼부터 7번째 컬럼까지 (인덱스 2부터 6까지) 선택
                 cols_to_check = final_data_rows.columns[3:9]
 
                 # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
                 nan_condition = final_data_rows[cols_to_check].isnull().all(axis=1)
                 market_df = final_data_rows[nan_condition & (final_data_rows["VARIANT"]=="GENERAL")]
+
+                st.write("check_point", final_data_rows)
+
+                
 
                 if scope == "market":
                     analyzed_monthly_market_df = monthly_performances(market_df)
