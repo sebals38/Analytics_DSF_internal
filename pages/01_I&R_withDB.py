@@ -45,24 +45,7 @@ def load_df_from_db(db_name="uploaded_data.db", table_name="analyzed_data", db_f
     except Exception as e:
         st.error(f"데이터베이스 로드 중 오류 발생: {e}")
         return None
-    
-# @st.cache_data(show_spinner="Initializing session_state...")
-# def init_session_state():
-#     if "uploaded_df" not in st.session_state:
-#         st.session_state["uploaded_df"] = None
-#     # if "df_analyzed" not in st.session_state:
-#     #     st.session_state["df_analyzed"] = None
-#     if "final_data_rows" not in st.session_state:
-#         st.session_state["final_data_rows"] = None
-#     if "final_data_rows_loaded" not in st.session_state:
-#         st.session_state["final_data_rows_loaded"] = None
-#     if "scope" not in st.session_state:
-#         st.session_state["scope"] = "market" # 기본값 설정
-#     if "data_saved" not in st.session_state:
-#         st.session_state["data_saved"] = False
-
-# init_session_state
-
+ 
 if "uploaded_df" not in st.session_state:
     st.session_state["uploaded_df"] = None
 # if "df_analyzed" not in st.session_state:
@@ -230,7 +213,7 @@ if st.session_state["final_data_rows"] is not None:
         nan_condition = st.session_state["final_data_rows"][cols_to_check].isnull().all(axis=1)
 
         all_manufacturer_df = st.session_state["final_data_rows"][nan_condition & ~((st.session_state["final_data_rows"].iloc[:,2].isnull()) | (st.session_state["final_data_rows"].iloc[:,3].isnull()))]
-        
+
         manufacturer_list = st.session_state["final_data_rows"][manufacturer_desc].dropna().unique().tolist()                    
         selected_manufacturer = st.selectbox("분석할 제조사를 선택하세요.", sorted(manufacturer_list))
 
@@ -238,6 +221,15 @@ if st.session_state["final_data_rows"] is not None:
 
         monthly_result_df = causal_analysis(all_manufacturer_df, timestamp=1)
         three_monthly_result_df = causal_analysis(all_manufacturer_df, timestamp=2)
+
+        st.write("check_point!!!", three_monthly_result_df)
+        
+        latest_mo = monthly_result_df.columns[-1].split("_")[-2] if not intermediate_df_val.empty else ""
+        month_ago = monthly_result_df.columns[-2].split("_")[-1] if len(intermediate_df_val.columns) >= 2 else ""
+
+        latest_3mo = three_monthly_result_df.columns[-1].split("_")[-2] if not intermediate_df_val.empty else ""
+        previous_3mo = three_monthly_result_df.columns[-2].split("_")[-1] if len(intermediate_df_val.columns) >= 4 else ""
+
 
         monthly_cause_diagnosis = monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, latest_mo, month_ago)
         three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo)
