@@ -153,7 +153,7 @@ def find_month_index(df, target_month):
             MS_3month_yag_index = df.columns.get_loc(MS_3month_yag_column)
             return month_index, previous_month_index, month_yag_index, month_2yag_index, three_month_index, previous_three_month_index, three_month_yag_index, MS_month_index, previous_MS_month_index, MS_month_yag_index, MS_month_2yag_index, MS_3month_index, previous_MS_3month_index, MS_3month_yag_index
         except KeyError as e:
-            st.warning(f"'{target_month}'에 해당하는 컬럼 '{e}'을 찾을 수 없습니다.")
+            st.warning(f"Cannot find column '{e}' corresponding to '{target_month}'.")
             return (None,) * 14
     else:
         return (None,) * 14
@@ -165,29 +165,29 @@ def monthly_performances(df):
     results = {}
 
     # 금액 성장률
-    results['전월대비 금액 성장률'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+2] * 100) - 100).round(1).iloc[0]} %"
-    results['전년동월대비 금액 성장률'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+3] * 100) - 100).round(1).iloc[0]} %"
-    results['전전년동월대비 금액 성장률'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+4] * 100) - 100).round(1).iloc[0]} %"
+    results['Value growth MoM'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+2] * 100) - 100).round(1).iloc[0]} %"
+    results['Monthly value growth YoY'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+3] * 100) - 100).round(1).iloc[0]} %"
+    results['Monthly value growth vs. 2 YAG'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+4] * 100) - 100).round(1).iloc[0]} %"
 
     # 물량 성장률
-    results['전월대비 물량 성장률'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+16] * 100) - 100).round(1).iloc[0]} %"
-    results['전년동월대비 물량 성장률'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+17] * 100) - 100).round(1).iloc[0]} %"
-    results['전전년동월대비 물량 성장률'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+18] * 100) - 100).round(1).iloc[0]} %"
+    results['Volume growth MoM'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+16] * 100) - 100).round(1).iloc[0]} %"
+    results['Monthly volume growth YoY'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+17] * 100) - 100).round(1).iloc[0]} %"
+    results['Monthly volume growth vs. 2 YAG'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+18] * 100) - 100).round(1).iloc[0]} %"
 
     # 금액 점유율 변화율
-    results['전월대비 금액점유율 변화율'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+9]).round(1).iloc[0]} %"
-    results['전년동월대비 금액점유율 변화율'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+10]).round(1).iloc[0]} %"
-    results['전전년동월대비 금액점유율 변화율'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+11]).round(1).iloc[0]} %"
+    results['Value share difference MoM'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+9]).round(1).iloc[0]} %"
+    results['Monthly value share difference vs. YAG'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+10]).round(1).iloc[0]} %"
+    results['Monthly value share difference vs. 2 YAG'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+11]).round(1).iloc[0]} %"
 
     # 물량 점유율 변화율
-    results['전월대비 물량점유율 변화율'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+23]).round(1).iloc[0]} %"
-    results['전년동월대비 물량점유율 변화율'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+24]).round(1).iloc[0]} %"
-    results['전전년동월대비 물량점유율 변화율'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+25]).round(1).iloc[0]} %"
+    results['Volume share difference MoM'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+23]).round(1).iloc[0]} %"
+    results['Monthly volume share difference vs. YAG'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+24]).round(1).iloc[0]} %"
+    results['Monthly volume share difference vs. 2 YAG'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+25]).round(1).iloc[0]} %"
 
     # kg당 단가 변화율
-    results['전월대비 kg당 단가 변화율'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+30] - 1) * 100).round(1).iloc[0]} %"
-    results['전년동월대비 kg당 단가 변화율'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+31] - 1) * 100).round(1).iloc[0]} %"
-    results['전전년동월대비 kg당 단가 변화율'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+32] - 1) * 100).round(1).iloc[0]} %"
+    results['Per kilo price difference MoM'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+30] - 1) * 100).round(1).iloc[0]} %"
+    results['Per kilo price difference vs. YAG'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+31] - 1) * 100).round(1).iloc[0]} %"
+    results['Per kilo price difference vs. 2 YAG'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+32] - 1) * 100).round(1).iloc[0]} %"
 
     return pd.DataFrame([results]).T
 
@@ -198,24 +198,24 @@ def three_monthly_performances(df):
     results = {}
 
     # 금액 성장률
-    results['3개월_전기대비 금액 성장률'] = f"{((df.iloc[:, item_index+5] / df.iloc[:, item_index+6] * 100) - 100).round(1).iloc[0]} %"
-    results['3개월_전년대비 금액 성장률'] = f"{((df.iloc[:, item_index+5] / df.iloc[:, item_index+7] * 100) - 100).round(1).iloc[0]} %"
+    results['3monthly_value growth vs. PP'] = f"{((df.iloc[:, item_index+5] / df.iloc[:, item_index+6] * 100) - 100).round(1).iloc[0]} %"
+    results['3monthly_value growth YoY'] = f"{((df.iloc[:, item_index+5] / df.iloc[:, item_index+7] * 100) - 100).round(1).iloc[0]} %"
 
     # 물량 성장률
-    results['3개월_전기대비 물량 성장률'] = f"{((df.iloc[:, item_index+19] / df.iloc[:, item_index+20] * 100) - 100).round(1).iloc[0]} %"
-    results['3개월_전년대비 물량 성장률'] = f"{((df.iloc[:, item_index+19] / df.iloc[:, item_index+21] * 100) - 100).round(1).iloc[0]} %"
+    results['3monthly_volume growth vs. PP'] = f"{((df.iloc[:, item_index+19] / df.iloc[:, item_index+20] * 100) - 100).round(1).iloc[0]} %"
+    results['3monthly_volume growth YoY'] = f"{((df.iloc[:, item_index+19] / df.iloc[:, item_index+21] * 100) - 100).round(1).iloc[0]} %"
 
     # 금액 점유율 변화율
-    results['3개월_전기대비 금액점유율 변화율'] = f"{(df.iloc[:, item_index+12] - df.iloc[:, item_index+13]).round(1).iloc[0]} %"
-    results['3개월_전년대비 금액점유율 변화율'] = f"{(df.iloc[:, item_index+12] - df.iloc[:, item_index+14]).round(1).iloc[0]} %"
+    results['3monthly_value share difference vs. PP'] = f"{(df.iloc[:, item_index+12] - df.iloc[:, item_index+13]).round(1).iloc[0]} %"
+    results['3monthly_value share difference YoY'] = f"{(df.iloc[:, item_index+12] - df.iloc[:, item_index+14]).round(1).iloc[0]} %"
 
     # 물량 점유율 변화율
-    results['3개월_전기대비 물량점유율 변화율'] = f"{(df.iloc[:, item_index+26] - df.iloc[:, item_index+27]).round(1).iloc[0]} %"
-    results['3개월_전년대비 물량점유율 변화율'] = f"{(df.iloc[:, item_index+26] - df.iloc[:, item_index+28]).round(1).iloc[0]} %"
+    results['3monthly_volume share difference vs. PP'] = f"{(df.iloc[:, item_index+26] - df.iloc[:, item_index+27]).round(1).iloc[0]} %"
+    results['3monthly_volume share difference YoY'] = f"{(df.iloc[:, item_index+26] - df.iloc[:, item_index+28]).round(1).iloc[0]} %"
 
     # kg당 단가 변화율
-    results['3개월_전기대비 kg당 단가 변화율'] = f"{((df.iloc[:, item_index+33] / df.iloc[:, item_index+34] - 1) * 100).round(1).iloc[0]} %"
-    results['3개월_전년대비 kg당 단가 변화율'] = f"{((df.iloc[:, item_index+33] / df.iloc[:, item_index+35] - 1) * 100).round(1).iloc[0]} %"
+    results['Per kilo 3monthly price difference vs. PP'] = f"{((df.iloc[:, item_index+33] / df.iloc[:, item_index+34] - 1) * 100).round(1).iloc[0]} %"
+    results['Per kilo 3monthly price difference YoY'] = f"{((df.iloc[:, item_index+33] / df.iloc[:, item_index+35] - 1) * 100).round(1).iloc[0]} %"
 
     return pd.DataFrame([results]).T
 
@@ -348,12 +348,13 @@ def monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, lat
     # Target 제조사 진단
     if not target_df.empty:
         diagnose_target_df = target_df.T
+        # st.write("check_point_func!!!", diagnose_target_df)
         diagnose_target_df.columns = ["Target"]
         diagnose_df = diagnose_df.join(diagnose_target_df, how="right")
         # st.subheader(f"Target Manufacturer_monthly: {selected_manufacturer}")
         # st.write(diagnose_df)
     else:
-        st.warning(f"선택한 제조사 '{selected_manufacturer}'에 대한 데이터가 없습니다.")
+        st.warning(f"No data for the selected manufacturer '{selected_manufacturer}' available.")
         return  # Target 데이터 없으면 분석 중단
 
     # Untarget 제조사 진단
@@ -381,9 +382,9 @@ def monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, lat
             return monthly_diagnose_df
             
         else:
-            st.warning(f"Target 제조사에 '{sort_column}' 컬럼이 없거나 값이 없어 원인 분석을 건너뜁니다.")
+            st.warning(f"Skip monthly diagnosis for the target manufacturer due to missing column '{sort_column}' or missing value.")
     else:
-        st.info("원인이 되는 다른 제조사 데이터가 없습니다.")
+        st.info("No data for the causual manufacturer")
 
 
 def three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo):
@@ -410,9 +411,9 @@ def three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manuf
         # st.subheader(f"Target Manufacturer_3monthly: {selected_manufacturer}")
         # st.write(diagnose_df)
     else:
-        st.warning(f"선택한 제조사 '{selected_manufacturer}'에 대한 데이터가 없습니다.")
+        st.warning(f"No data for the selected manufacturer '{selected_manufacturer}' available.")
         return  # Target 데이터 없으면 분석 중단
-
+    
     # Untarget 제조사 진단
     if not untarget_df.empty:
         untarget_df = untarget_df[1:].copy()  # 첫 번째 행 제외
@@ -439,6 +440,6 @@ def three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manuf
             three_monthly_diagnose_df = diagnose_df.join(diagnose_untarget_transposed_df, how="right")
             return three_monthly_diagnose_df
         else:
-            st.warning(f"Target 제조사에 '{sort_column}' 컬럼이 없거나 값이 없어 원인 분석을 건너뜁니다.")
+            st.warning(f"Skip monthly diagnosis for the target manufacturer due to missing column '{sort_column}' or missing value.")
     else:
-        st.info("원인이 되는 다른 제조사 데이터가 없습니다.")
+        st.info("No data for the causual manufacturer")
