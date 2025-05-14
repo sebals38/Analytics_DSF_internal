@@ -45,6 +45,23 @@ def load_df_from_db(db_name="uploaded_data.db", table_name="analyzed_data", db_f
     except Exception as e:
         st.error(f"데이터베이스 로드 중 오류 발생: {e}")
         return None
+    
+# @st.cache_data(show_spinner="Initializing session_state...")
+# def init_session_state():
+#     if "uploaded_df" not in st.session_state:
+#         st.session_state["uploaded_df"] = None
+#     # if "df_analyzed" not in st.session_state:
+#     #     st.session_state["df_analyzed"] = None
+#     if "final_data_rows" not in st.session_state:
+#         st.session_state["final_data_rows"] = None
+#     if "final_data_rows_loaded" not in st.session_state:
+#         st.session_state["final_data_rows_loaded"] = None
+#     if "scope" not in st.session_state:
+#         st.session_state["scope"] = "market" # 기본값 설정
+#     if "data_saved" not in st.session_state:
+#         st.session_state["data_saved"] = False
+
+# init_session_state
 
 if "uploaded_df" not in st.session_state:
     st.session_state["uploaded_df"] = None
@@ -59,13 +76,15 @@ if "scope" not in st.session_state:
 if "data_saved" not in st.session_state:
     st.session_state["data_saved"] = False
 
+df = None
+
 with st.sidebar:
     uploaded_file = st.file_uploader("Upload CSV or Excel file to analyze", type=["csv", "xlsx"])
     db_folder_name = "db"  # 저장할 폴더 이름
     
     if st.button("저장된 데이터 불러오기"): # 저장된 경우에만 활성화
         st.session_state["uploaded_df"] = load_df_from_db(db_name="I&R.db", db_folder=db_folder_name)
-        df = st.session_state["uploaded_df"].copy()
+        # df = st.session_state["uploaded_df"].copy()
         # df = df.replace({np.nan: 0}).copy() # NaN을 0으로 채움
 
     elif uploaded_file is not None:
@@ -73,11 +92,11 @@ with st.sidebar:
             file_extension = uploaded_file.name.split('.')[-1].lower()
             if file_extension == "csv":
                 st.session_state["uploaded_df"] = pd.read_csv(uploaded_file, skiprows=8, index_col=False, encoding="utf-8")
-                df = st.session_state["uploaded_df"].copy()
+                # df = st.session_state["uploaded_df"].copy()
                 st.success("DATA file loading complete!")
             elif file_extension == "xlsx":
                 st.session_state["uploaded_df"] = pd.read_excel(uploaded_file, skiprows=8, index_col=False)
-                df = st.session_state["uploaded_df"].copy()
+                # df = st.session_state["uploaded_df"].copy()
                 st.success("DATA file loading complete!")
             else:
                 st.info("Upload CSV or Excel file to analyze.")
@@ -103,18 +122,18 @@ with st.sidebar:
 # if "uploaded_df" in st.session_state:
 if st.session_state["uploaded_df"] is not None:
     # 원 데이터프레임 컬럼 분할
-    fact_columns = [col for col in df.columns if 'Unnamed' in col]
-    value_columns = [col for col in df.columns if 'Value' in col]
-    volume_columns = [col for col in df.columns if 'KG' in col]
+    fact_columns = [col for col in st.session_state["uploaded_df"].columns if 'Unnamed' in col]
+    value_columns = [col for col in st.session_state["uploaded_df"].columns if 'Value' in col]
+    volume_columns = [col for col in st.session_state["uploaded_df"].columns if 'KG' in col]
 
-    fact_data_rows, val_data_rows, vol_data_rows = generate_columns(df, fact_columns, value_columns, volume_columns)
+    fact_data_rows, val_data_rows, vol_data_rows = generate_columns(st.session_state["uploaded_df"], fact_columns, value_columns, volume_columns)
 
-    col_fact = df[fact_columns].iloc[0].tolist()
+    col_fact = st.session_state["uploaded_df"][fact_columns].iloc[0].tolist()
     if fact_data_rows is not None and len(fact_data_rows.columns) == len(col_fact):
         fact_data_rows.columns = col_fact
 
-    intermediate_df_val = intermediate_df(df, value_columns)
-    intermediate_df_vol = intermediate_df(df, volume_columns)
+    intermediate_df_val = intermediate_df(st.session_state["uploaded_df"], value_columns)
+    intermediate_df_vol = intermediate_df(st.session_state["uploaded_df"], volume_columns)
 
     latest_mo = intermediate_df_val.columns[-1][-6:] if not intermediate_df_val.empty else ""
     month_ago = intermediate_df_val.columns[-2][-6:] if len(intermediate_df_val.columns) >= 2 else ""
