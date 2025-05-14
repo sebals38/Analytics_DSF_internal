@@ -24,10 +24,10 @@ def save_df_to_db(df, db_name="uploaded_data.db", table_name="analyzed_data", db
         df.to_sql(table_name, conn, if_exists='replace', index=False)
         conn.commit()
         conn.close()
-        st.success(f"DataFrame을 '{db_path}' 데이터베이스의 '{table_name}' 테이블에 저장했습니다.")
+        st.success(f"'{db_path}' dataFrame has just been saved in table named '{table_name}'.")
         return True
     except Exception as e:
-        st.error(f"데이터베이스 저장 중 오류 발생: {e}")
+        st.error(f"An error occured in saving the database : {e}")
         return False
 
 def load_df_from_db(db_name="uploaded_data.db", table_name="analyzed_data", db_folder="db"):
@@ -40,10 +40,10 @@ def load_df_from_db(db_name="uploaded_data.db", table_name="analyzed_data", db_f
         query = f"SELECT * FROM {table_name}"
         loaded_df = pd.read_sql(query, conn)
         conn.close()
-        st.success(f"'{db_path}' 데이터베이스의 '{table_name}' 테이블에서 데이터를 불러왔습니다.")
+        st.success(f"table named '{table_name}' has been loaded from '{db_path}' database.")
         return loaded_df
     except Exception as e:
-        st.error(f"데이터베이스 로드 중 오류 발생: {e}")
+        st.error(f"An error occured in loading the database : {e}")
         return None
  
 if "uploaded_df" not in st.session_state:
@@ -65,7 +65,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload CSV or Excel file to analyze", type=["csv", "xlsx"])
     db_folder_name = "db"  # 저장할 폴더 이름
     
-    if st.button("저장된 데이터 불러오기"): # 저장된 경우에만 활성화
+    if st.button("Upload data"): # 저장된 경우에만 활성화
         st.session_state["uploaded_df"] = load_df_from_db(db_name="I&R.db", db_folder=db_folder_name)
         # df = st.session_state["uploaded_df"].copy()
         # df = df.replace({np.nan: 0}).copy() # NaN을 0으로 채움
@@ -88,9 +88,9 @@ with st.sidebar:
             # db_folder_name = "db"  # 저장할 폴더 이름
             fill_na_value = 0
             # 데이터베이스 저장
-            if st.button("분석 결과 저장"):
+            if st.button("Save the pre-loaded data"):
                 if save_df_to_db(st.session_state["uploaded_df"].copy(), db_name="I&R.db", db_folder=db_folder_name, fill_value=fill_na_value):
-                    st.info(f"데이터가 '{db_folder_name}' 폴더에 저장되었습니다. 아래 버튼을 눌러 불러올 수 있습니다.")
+                    st.info(f"The pre-loaded data has been saved in '{db_folder_name}' folder.  Reload the data by clicking \"Upload data\" button above.")
 
             # if st.session_state["uploaded_df"] is not None:
             #     df = st.session_state["uploaded_df"].copy()
@@ -126,8 +126,8 @@ if st.session_state["uploaded_df"] is not None:
     previous_3mo = intermediate_df_val.columns[-4][-6:] if len(intermediate_df_val.columns) >= 4 else ""
 
     # 예시: 'Feb 25'를 입력받아 volume 월별 인덱스 찾기
-    target_month = st.text_input(f"분석 기준 월을 입력하세요 (예: {latest_mo})", f"{latest_mo}")
-    st.write(f"target_month 초기값: {target_month}")
+    target_month = st.text_input(f"Input the time point to analyze. (e.g.: {latest_mo})", f"{latest_mo}")
+    st.write(f"Time point to analyze : {target_month}")
 
     target_indices_vol = find_month_index(intermediate_df_vol, target_month)
     anal_df_vol = anal_df(intermediate_df_vol, target_indices_vol)
@@ -163,7 +163,7 @@ if st.session_state["uploaded_df"] is not None:
             st.session_state["final_data_rows"] = generate_df_to_analyze(st.session_state["final_data_rows"])
 
 if st.session_state["final_data_rows"] is not None:
-    st.session_state["scope"] = st.radio("분석할 단계를 선택하세요", ["market", "segment", "manufacturer", "brand", "subbrand"], index=["market", "segment", "manufacturer", "brand", "subbrand"].index(st.session_state["scope"]))
+    st.session_state["scope"] = st.radio("Select the level to analyze.", ["market", "segment", "manufacturer", "brand", "subbrand"], index=["market", "segment", "manufacturer", "brand", "subbrand"].index(st.session_state["scope"]))
 
     ## total market : 예) 3번째 컬럼부터 7번째 컬럼까지 (인덱스 2부터 6까지) 선택
     cols_to_check = st.session_state["final_data_rows"].columns[2:7]
@@ -184,11 +184,11 @@ if st.session_state["final_data_rows"] is not None:
         nan_condition = st.session_state["final_data_rows"][cols_to_check].isnull().all(axis=1)
 
         segment_list = st.session_state["final_data_rows"][segment_desc].dropna().unique().tolist()                    
-        selected_segment = st.selectbox("분석할 세그먼트를 선택하세요.", sorted(segment_list))
+        selected_segment = st.selectbox("Select the segment to analyze.", sorted(segment_list))
 
         segment_df = st.session_state["final_data_rows"][(nan_condition&~st.session_state["final_data_rows"].iloc[:,2].isnull()) & (st.session_state["final_data_rows"][segment_desc]==selected_segment)]
 
-        st.write(f"선택된 브랜드: {selected_segment}")
+        # st.write(f"Selected segment : {selected_segment}")
 
         analyzed_monthly_market_df = monthly_performances(market_df)
         analyzed_monthly_market_df.columns = ["market"]
@@ -215,21 +215,28 @@ if st.session_state["final_data_rows"] is not None:
         all_manufacturer_df = st.session_state["final_data_rows"][nan_condition & ~((st.session_state["final_data_rows"].iloc[:,2].isnull()) | (st.session_state["final_data_rows"].iloc[:,3].isnull()))]
 
         manufacturer_list = st.session_state["final_data_rows"][manufacturer_desc].dropna().unique().tolist()                    
-        selected_manufacturer = st.selectbox("분석할 제조사를 선택하세요.", sorted(manufacturer_list))
+        selected_manufacturer = st.selectbox("Select the manufacturer to analyze.", sorted(manufacturer_list))
 
         manufacturer_df = st.session_state["final_data_rows"][(nan_condition&~st.session_state["final_data_rows"].iloc[:,2].isnull()) & (st.session_state["final_data_rows"]["MANUFACTURER"]==selected_manufacturer)]
+        
+        st.write("check_point!!!", all_manufacturer_df)
+
+        manufacturer_segment_list = manufacturer_df["SEGMENTC"].dropna().unique().tolist()
+
+        if len(manufacturer_segment_list) > 1:
+            selected_manufacturer_segment = st.selectbox("제조사내 분석할 세그먼트를 선택하세요.", sorted(manufacturer_segment_list))
+            manufacturer_df = manufacturer_df[manufacturer_df["SEGMENTC"]==selected_manufacturer_segment]
+        else:
+            manufacturer_df = manufacturer_df
 
         monthly_result_df = causal_analysis(all_manufacturer_df, timestamp=1)
         three_monthly_result_df = causal_analysis(all_manufacturer_df, timestamp=2)
-
-        st.write("check_point!!!", three_monthly_result_df)
         
         latest_mo = monthly_result_df.columns[-1].split("_")[-2] if not intermediate_df_val.empty else ""
         month_ago = monthly_result_df.columns[-2].split("_")[-1] if len(intermediate_df_val.columns) >= 2 else ""
 
         latest_3mo = three_monthly_result_df.columns[-1].split("_")[-2] if not intermediate_df_val.empty else ""
         previous_3mo = three_monthly_result_df.columns[-2].split("_")[-1] if len(intermediate_df_val.columns) >= 4 else ""
-
 
         monthly_cause_diagnosis = monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, latest_mo, month_ago)
         three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo)
@@ -245,11 +252,11 @@ if st.session_state["final_data_rows"] is not None:
                             
         analyzed_monthly_market_manufacturer_df = pd.merge(
             analyzed_monthly_market_df, analyzed_monthly_manufacturer_df, on=analyzed_monthly_market_df.index)
-        analyzed_monthly_market_manufacturer_df = analyzed_monthly_market_manufacturer_df.rename(columns={'key_0':'features'})
+        analyzed_monthly_market_manufacturer_df = analyzed_monthly_market_manufacturer_df.rename(columns={'key_0':'Features'})
         
         analyzed_3monthly_market_manufacturer_df = pd.merge(
             analyzed_3monthly_market_df, analyzed_3monthly_manufacturer_df, on=analyzed_3monthly_market_df.index)
-        analyzed_3monthly_market_manufacturer_df = analyzed_3monthly_market_manufacturer_df.rename(columns={'key_0':'features'})
+        analyzed_3monthly_market_manufacturer_df = analyzed_3monthly_market_manufacturer_df.rename(columns={'key_0':'Features'})
     elif st.session_state["scope"] == "brand":
         cols_to_check = st.session_state["final_data_rows"].columns[5:7]
         # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
@@ -258,20 +265,21 @@ if st.session_state["final_data_rows"] is not None:
         all_manufacturer_brand_df = st.session_state["final_data_rows"][nan_condition & ~((st.session_state["final_data_rows"].iloc[:,3].isnull()) | (st.session_state["final_data_rows"].iloc[:,4].isnull()))]
 
         selected_manufacturer_brand_list = all_manufacturer_brand_df["MANUFACTURER"].dropna().unique().tolist()                    
-        selected_manufacturer = st.selectbox("분석할 제조사를 선택하세요.", sorted(selected_manufacturer_brand_list))
+        selected_manufacturer = st.selectbox("Select the manufacturer to analyze.", sorted(selected_manufacturer_brand_list))
 
         selected_manufacturer_brand_df = all_manufacturer_brand_df[(nan_condition&~(all_manufacturer_brand_df.iloc[:,2].isnull() | all_manufacturer_brand_df.iloc[:,3].isnull())) & (all_manufacturer_brand_df["MANUFACTURER"]==selected_manufacturer)]
 
         brand_list = selected_manufacturer_brand_df["BRAND"].dropna().unique().tolist()
         
-        selected_brand = st.selectbox("분석할 브랜드를 선택하세요.", sorted(brand_list))
-        st.write(f"선택된 브랜드: {selected_brand}")
+        selected_brand = st.selectbox("Select the brand to analyze.", sorted(brand_list))
+        # st.write(f"Selected brand : {selected_brand}")
 
-        brand_rows_temp = st.session_state["final_data_rows"][st.session_state["final_data_rows"]["BRAND"].str.contains(selected_brand, na=False)]
+        # brand_rows_temp = st.session_state["final_data_rows"][st.session_state["final_data_rows"]["BRAND"].str.contains(selected_brand, na=False)]
+        brand_rows_temp = st.session_state["final_data_rows"][st.session_state["final_data_rows"]["BRAND"] == selected_brand]
         brand_df = brand_rows_temp[brand_rows_temp["SUBBRAND"].isna()]
 
         segment_list = brand_df["SEGMENTC"].dropna().unique().tolist()                    
-        selected_segment = st.selectbox("분석할 세그먼트를 선택하세요.", sorted(segment_list))
+        selected_segment = st.selectbox("Select the segment to analyze.", sorted(segment_list))
 
         brand_df = brand_df[brand_df["SEGMENTC"]==selected_segment]
 
@@ -286,11 +294,11 @@ if st.session_state["final_data_rows"] is not None:
                             
         analyzed_monthly_market_brand_df = pd.merge(
             analyzed_monthly_market_df, analyzed_monthly_brand_df, on=analyzed_monthly_market_df.index)
-        analyzed_monthly_market_brand_df = analyzed_monthly_market_brand_df.rename(columns={'key_0':'features'})
+        analyzed_monthly_market_brand_df = analyzed_monthly_market_brand_df.rename(columns={'key_0':'Features'})
         
         analyzed_3monthly_market_brand_df = pd.merge(
             analyzed_3monthly_market_df, analyzed_3monthly_brand_df, on=analyzed_3monthly_market_df.index)
-        analyzed_3monthly_market_brand_df = analyzed_3monthly_market_brand_df.rename(columns={'key_0':'features'})
+        analyzed_3monthly_market_brand_df = analyzed_3monthly_market_brand_df.rename(columns={'key_0':'Features'})
     elif st.session_state["scope"] == "subbrand":
         cols_to_check = st.session_state["final_data_rows"].columns[5:7]
         # 선택된 컬럼들이 모두 NaN인 조건으로 행 발췌
@@ -299,22 +307,23 @@ if st.session_state["final_data_rows"] is not None:
         all_manufacturer_brand_df = st.session_state["final_data_rows"][nan_condition & ~((st.session_state["final_data_rows"].iloc[:,3].isnull()) | (st.session_state["final_data_rows"].iloc[:,4].isnull()))]
 
         selected_manufacturer_brand_list = all_manufacturer_brand_df["MANUFACTURER"].dropna().unique().tolist()                    
-        selected_manufacturer = st.selectbox("분석할 제조사를 선택하세요.", sorted(selected_manufacturer_brand_list))
+        selected_manufacturer = st.selectbox("Select the manufacturer to analyze.", sorted(selected_manufacturer_brand_list))
 
         selected_manufacturer_brand_df = all_manufacturer_brand_df[(nan_condition&~(all_manufacturer_brand_df.iloc[:,2].isnull() | all_manufacturer_brand_df.iloc[:,3].isnull())) & (all_manufacturer_brand_df["MANUFACTURER"]==selected_manufacturer)]
 
         brand_list = selected_manufacturer_brand_df["BRAND"].dropna().unique().tolist()
         
-        selected_brand = st.selectbox("분석할 브랜드를 선택하세요.", sorted(brand_list))
-        st.write(f"선택된 브랜드: {selected_brand}")
+        selected_brand = st.selectbox("Select the brand to analyze.", sorted(brand_list))
+        # st.write(f"Selected brand: {selected_brand}")
 
         brand_rows_temp = st.session_state["final_data_rows"][st.session_state["final_data_rows"]["BRAND"].str.contains(selected_brand, na=False)]
         
         subbrand_list = brand_rows_temp[brand_rows_temp["ITEM"].isna()]["SUBBRAND"].dropna().unique().tolist()
-        selected_subbrand = st.selectbox("분석할 서브브랜드를 선택하세요.", sorted(subbrand_list))
-        st.write(f"선택된 서브브브랜드: {selected_subbrand}")
+        selected_subbrand = st.selectbox("Select the subbrand to analyze.", sorted(subbrand_list))
+        # st.write(f"Selected subbrand: {selected_subbrand}")
         
-        subbrand_rows_temp = brand_rows_temp[brand_rows_temp["SUBBRAND"].str.contains(selected_subbrand, na=False)]
+        # subbrand_rows_temp = brand_rows_temp[brand_rows_temp["SUBBRAND"].str.contains(selected_subbrand, na=False)]
+        subbrand_rows_temp = brand_rows_temp[brand_rows_temp["SUBBRAND"] == selected_subbrand]
         subbrand_df = subbrand_rows_temp[subbrand_rows_temp["ITEM"].isna()]
 
         analyzed_monthly_market_df = monthly_performances(market_df)
@@ -328,11 +337,11 @@ if st.session_state["final_data_rows"] is not None:
                             
         analyzed_monthly_market_subbrand_df = pd.merge(
             analyzed_monthly_market_df, analyzed_monthly_subbrand_df, on=analyzed_monthly_market_df.index)
-        analyzed_monthly_market_subbrand_df = analyzed_monthly_market_subbrand_df.rename(columns={'key_0':'features'})
+        analyzed_monthly_market_subbrand_df = analyzed_monthly_market_subbrand_df.rename(columns={'key_0':'Features'})
         
         analyzed_3monthly_market_subbrand_df = pd.merge(
             analyzed_3monthly_market_df, analyzed_3monthly_subbrand_df, on=analyzed_3monthly_market_df.index)
-        analyzed_3monthly_market_subbrand_df = analyzed_3monthly_market_subbrand_df.rename(columns={'key_0':'features'})
+        analyzed_3monthly_market_subbrand_df = analyzed_3monthly_market_subbrand_df.rename(columns={'key_0':'Features'})
 
     st.write("")
     st.write("===========================================================================")        
@@ -380,7 +389,7 @@ if st.session_state["final_data_rows"] is not None:
         st.dataframe(analyzed_3monthly_market_subbrand_df) 
 
 else:
-        st.warning("최종 분석 결과를 생성할 데이터가 부족합니다.")
+        st.warning("No data has been loaded to analyze.")
 # elif uploaded_file is not None:
 #         st.warning("물량 또는 금액 관련 분석 데이터를 생성할 수 없습니다. 컬럼명을 확인해주세요.")
             
@@ -390,7 +399,7 @@ else:
 #     load_df_from_db(db_folder=db_folder_name)
 
 if st.session_state["final_data_rows_loaded"] is not None:
-    st.subheader("불러온 데이터:")
+    st.subheader("Loaded data:")
     st.dataframe(st.session_state["final_data_rows_loaded"])
     st.session_state["final_data_rows"] = st.session_state["final_data_rows_loaded"].copy() # 불러온 데이터를 분석에 사용
     st.session_state["final_data_rows_loaded"] = None # 불러온 데이터는 한 번만 처리
