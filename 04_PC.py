@@ -139,7 +139,7 @@ if uploaded_file is not None:
 
                     manufacturer_df = final_data_rows[(nan_condition&~final_data_rows.iloc[:,2].isnull()) & (final_data_rows["MANUFACTURER"]==selected_manufacturer)]
 
-                    segment_list = manufacturer_df["TYPE"].dropna().unique().tolist()                    
+                    segment_list = manufacturer_df["TYPE"].dropna().unique().tolist()
                     selected_segment = st.selectbox("분석할 세그먼트를 선택하세요.", sorted(segment_list))
 
                     segment_df = manufacturer_df[manufacturer_df["TYPE"]==selected_segment]
