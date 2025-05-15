@@ -329,7 +329,7 @@ def causal_analysis(df, timestamp=1):
     return filtered_df_fact
 
 
-def monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, latest_mo, month_ago):
+def monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, selected_manufacturer_segment, latest_mo, month_ago):
     """
     선택한 제조사(Target)와 그 외 제조사(Source)의 데이터를 분석하여 진단 결과를 보여줍니다.
 
@@ -340,8 +340,25 @@ def monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, lat
         month_ago (str): 이전 월 정보.
     """
 
-    target_df = monthly_result_df[monthly_result_df["MANUFACTURER"] == selected_manufacturer].copy()
-    untarget_df = monthly_result_df[monthly_result_df["MANUFACTURER"] != selected_manufacturer].copy()
+    if selected_manufacturer_segment is not None:
+        target_df = monthly_result_df[monthly_result_df["MANUFACTURER"] == selected_manufacturer].copy()
+        untarget_df = monthly_result_df[monthly_result_df["MANUFACTURER"] != selected_manufacturer].copy()
+
+        segment_columns = [col for col in monthly_result_df.columns if col.startswith("SEGMENT")]
+        if segment_columns:
+            segment_filter_target = False
+            segment_filter_untarget = True
+            for segment_col in segment_columns:
+                segment_filter_target = segment_filter_target | (target_df[segment_col] == selected_manufacturer_segment)
+                segment_filter_untarget = segment_filter_untarget & (untarget_df[segment_col] != selected_manufacturer_segment)
+
+            target_df = target_df[segment_filter_target]
+            untarget_df = untarget_df[segment_filter_untarget]
+        else:
+            print("경고: 'SEGMENT'로 시작하는 컬럼이 데이터프레임에 없습니다.")
+    else:
+        target_df = monthly_result_df[monthly_result_df["MANUFACTURER"] == selected_manufacturer].copy()
+        untarget_df = monthly_result_df[monthly_result_df["MANUFACTURER"] != selected_manufacturer].copy()
     diagnose_df = pd.DataFrame()
     sort_column = f"MS_value_diff_{latest_mo}_{month_ago}"
 
@@ -387,7 +404,7 @@ def monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, lat
         st.info("No data for the causual manufacturer")
 
 
-def three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo):
+def three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, selected_manufacturer_segment, latest_3mo, previous_3mo):
     """
     선택한 제조사(Target)와 그 외 제조사(Source)의 데이터를 분석하여 진단 결과를 보여줍니다.
 
@@ -398,8 +415,25 @@ def three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manuf
         month_ago (str): 이전 월 정보.
     """
 
-    target_df = three_monthly_result_df[three_monthly_result_df["MANUFACTURER"] == selected_manufacturer].copy()
-    untarget_df = three_monthly_result_df[three_monthly_result_df["MANUFACTURER"] != selected_manufacturer].copy()
+    if selected_manufacturer_segment is not None:
+        target_df = three_monthly_result_df[three_monthly_result_df["MANUFACTURER"] == selected_manufacturer].copy()
+        untarget_df = three_monthly_result_df[three_monthly_result_df["MANUFACTURER"] != selected_manufacturer].copy()
+
+        segment_columns = [col for col in three_monthly_result_df.columns if col.startswith("SEGMENT")]
+        if segment_columns:
+            segment_filter_target = False
+            segment_filter_untarget = True
+            for segment_col in segment_columns:
+                segment_filter_target = segment_filter_target | (target_df[segment_col] == selected_manufacturer_segment)
+                segment_filter_untarget = segment_filter_untarget & (untarget_df[segment_col] != selected_manufacturer_segment)
+
+            target_df = target_df[segment_filter_target]
+            untarget_df = untarget_df[segment_filter_untarget]
+        else:
+            print("경고: 'SEGMENT'로 시작하는 컬럼이 데이터프레임에 없습니다.")
+    else:
+        target_df = three_monthly_result_df[three_monthly_result_df["MANUFACTURER"] == selected_manufacturer].copy()
+        untarget_df = three_monthly_result_df[three_monthly_result_df["MANUFACTURER"] != selected_manufacturer].copy()
     diagnose_df = pd.DataFrame()
     sort_column = f"3mo_MS_value_diff_{latest_3mo}_{previous_3mo}"
 
