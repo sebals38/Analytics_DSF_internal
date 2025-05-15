@@ -161,7 +161,6 @@ if st.session_state["uploaded_df"] is not None:
                 # st.write("final_data_rows 컬럼 (초기 생성, 인덱스 reset):", final_data_rows.columns.tolist())
             
             st.session_state["final_data_rows"] = generate_df_to_analyze(st.session_state["final_data_rows"])
-            # st.write("check_point!!!", st.session_state["final_data_rows"])
 
 if st.session_state["final_data_rows"] is not None:
     st.session_state["scope"] = st.radio("Select the level to analyze.", ["market", "manufacturer", "manufacturer/segment", "manufacturer/brand", "subbrand"], index=["market", "manufacturer", "manufacturer/segment", "manufacturer/brand", "subbrand"].index(st.session_state["scope"]))
@@ -200,8 +199,9 @@ if st.session_state["final_data_rows"] is not None:
         latest_3mo = three_monthly_result_df.columns[-1].split("_")[-2] if not intermediate_df_val.empty else ""
         previous_3mo = three_monthly_result_df.columns[-2].split("_")[-1] if len(intermediate_df_val.columns) >= 4 else ""
 
-        monthly_cause_diagnosis = monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, latest_mo, month_ago)
-        three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo)
+        monthly_cause_diagnosis = monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, None, latest_mo, month_ago)
+        three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, None,
+        latest_3mo, previous_3mo)
         
         analyzed_monthly_market_df = monthly_performances(market_df)
         analyzed_monthly_market_df.columns = ["market"]
