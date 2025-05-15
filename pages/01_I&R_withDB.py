@@ -218,8 +218,6 @@ if st.session_state["final_data_rows"] is not None:
         selected_manufacturer = st.selectbox("Select the manufacturer to analyze.", sorted(manufacturer_list))
 
         manufacturer_df = st.session_state["final_data_rows"][(nan_condition&~st.session_state["final_data_rows"].iloc[:,2].isnull()) & (st.session_state["final_data_rows"]["MANUFACTURER"]==selected_manufacturer)]
-        
-        st.write("check_point!!!", all_manufacturer_df)
 
         manufacturer_segment_list = manufacturer_df["SEGMENTC"].dropna().unique().tolist()
 
@@ -227,6 +225,7 @@ if st.session_state["final_data_rows"] is not None:
             selected_manufacturer_segment = st.selectbox("제조사내 분석할 세그먼트를 선택하세요.", sorted(manufacturer_segment_list))
             manufacturer_df = manufacturer_df[manufacturer_df["SEGMENTC"]==selected_manufacturer_segment]
         else:
+            selected_manufacturer_segment  = None
             manufacturer_df = manufacturer_df
 
         monthly_result_df = causal_analysis(all_manufacturer_df, timestamp=1)
@@ -238,8 +237,8 @@ if st.session_state["final_data_rows"] is not None:
         latest_3mo = three_monthly_result_df.columns[-1].split("_")[-2] if not intermediate_df_val.empty else ""
         previous_3mo = three_monthly_result_df.columns[-2].split("_")[-1] if len(intermediate_df_val.columns) >= 4 else ""
 
-        monthly_cause_diagnosis = monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, latest_mo, month_ago)
-        three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, latest_3mo, previous_3mo)
+        monthly_cause_diagnosis = monthly_diagnose_manufacturers(monthly_result_df, selected_manufacturer, selected_manufacturer_segment, latest_mo, month_ago)
+        three_monthly_cause_diagnosis = three_monthly_diagnose_manufacturers(three_monthly_result_df, selected_manufacturer, selected_manufacturer_segment, latest_3mo, previous_3mo)
 
         analyzed_monthly_market_df = monthly_performances(market_df)
         analyzed_monthly_market_df.columns = ["market"]
