@@ -12,9 +12,8 @@ st.markdown(
             
 Here are the categories dashboard available:
             
-- [ ] [I&R](/I&R)
-- [ ] [CM](/CM)
-- [ ] [Capsule](/Capsule)
-- [ ] [Cereal](/Cereal)
+- [ ] [I&R](/I&R_withDB)
+- [ ] [CM](/CM_withDB)
+- [ ] [Capsule](/Capsule_withDB)
 """
 )
