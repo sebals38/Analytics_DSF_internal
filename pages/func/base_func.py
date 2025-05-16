@@ -97,7 +97,7 @@ def unitprice_df(anal_df_unitprice, price_columns):
             numerator = anal_df_unitprice.iloc[:, i + 7]
             denominator = anal_df_unitprice.iloc[:, i]
             price = numerator.div(denominator, fill_value=0) # 분모가 0일 경우 NaN으로 처리
-            anal_df_unitprice[column_name] = price.round(1)
+            anal_df_unitprice[column_name] = f"{price:,.1f}"
     return anal_df_unitprice.drop(anal_df_unitprice.columns[0:14], axis=1, errors='ignore')
 
 def find_month_index(df, target_month):
