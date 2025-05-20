@@ -164,32 +164,6 @@ def monthly_performances(df):
     item_index = df.columns.get_loc("ITEM")
 
     results = {}
-
-    # # 금액 성장률
-    # results['Value growth MoM'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+2] * 100) - 100).round(1).iloc[0]} %"
-    # results['Monthly value growth YoY'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+3] * 100) - 100).round(1).iloc[0]} %"
-    # results['Monthly value growth vs. 2 YAG'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+4] * 100) - 100).round(1).iloc[0]} %"
-
-    # # 물량 성장률
-    # results['Volume growth MoM'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+16] * 100) - 100).round(1).iloc[0]} %"
-    # results['Monthly volume growth YoY'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+17] * 100) - 100).round(1).iloc[0]} %"
-    # results['Monthly volume growth vs. 2 YAG'] = f"{((df.iloc[:, item_index+15] / df.iloc[:, item_index+18] * 100) - 100).round(1).iloc[0]} %"
-
-    # # 금액 점유율 변화율
-    # results['Value share difference MoM'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+9]).round(1).iloc[0]} %"
-    # results['Monthly value share difference vs. YAG'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+10]).round(1).iloc[0]} %"
-    # results['Monthly value share difference vs. 2 YAG'] = f"{(df.iloc[:, item_index+8] - df.iloc[:, item_index+11]).round(1).iloc[0]} %"
-
-    # # 물량 점유율 변화율
-    # results['Volume share difference MoM'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+23]).round(1).iloc[0]} %"
-    # results['Monthly volume share difference vs. YAG'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+24]).round(1).iloc[0]} %"
-    # results['Monthly volume share difference vs. 2 YAG'] = f"{(df.iloc[:, item_index+22] - df.iloc[:, item_index+25]).round(1).iloc[0]} %"
-
-    # # kg당 단가 변화율
-    # results['Per kilo price difference MoM'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+30] - 1) * 100).round(1).iloc[0]} %"
-    # results['Per kilo price difference vs. YAG'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+31] - 1) * 100).round(1).iloc[0]} %"
-    # results['Per kilo price difference vs. 2 YAG'] = f"{((df.iloc[:, item_index+29] / df.iloc[:, item_index+32] - 1) * 100).round(1).iloc[0]} %"
-
     # 금액 성장률
     results['Value growth MoM'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+2] * 100) - 100).round(1).iloc[0]} %"
     results['Monthly value growth YoY'] = f"{((df.iloc[:, item_index+1] / df.iloc[:, item_index+3] * 100) - 100).round(1).iloc[0]} %"
@@ -238,10 +212,6 @@ def three_monthly_performances(df):
     # 물량 점유율 변화율
     results['3monthly_volume share difference vs. PP'] = f"{(df.iloc[:, item_index+26] - df.iloc[:, item_index+27]).round(1).iloc[0]} %"
     results['3monthly_volume share difference YoY'] = f"{(df.iloc[:, item_index+26] - df.iloc[:, item_index+28]).round(1).iloc[0]} %"
-
-    # # kg당 단가 변화율
-    # results['Per kilo 3monthly price difference vs. PP'] = f"{((df.iloc[:, item_index+33] / df.iloc[:, item_index+34] - 1) * 100).round(1).iloc[0]} %"
-    # results['Per kilo 3monthly price difference YoY'] = f"{((df.iloc[:, item_index+33] / df.iloc[:, item_index+35] - 1) * 100).round(1).iloc[0]} %"
 
     # kg당 단가 변화율
     results['Per kilo 3monthly price difference vs. PP'] = f"{((pd.to_numeric(df.iloc[:, item_index+33].str.replace(',', '')) / pd.to_numeric(df.iloc[:, item_index+34].str.replace(',', '')) - 1) * 100).round(1).iloc[0]} %"
@@ -297,12 +267,6 @@ def causal_analysis(df, timestamp=1):
             elif thismonth_lastyear and col == f'{prefix}{thismonth_lastyear}':
                 thismonth_lastyear_index = i
 
-        # if 'this_month_index' in locals() and 'last_month_index' in locals():
-        #     df[f'{prefix}diff_{this_month}_{last_month}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, last_month_index] - 1) * 100).round(1)
-        # # if thismonth_lastyear and 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-        # if 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-        #     df[f'{prefix}diff_{this_month}_{thismonth_lastyear}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, thismonth_lastyear_index] - 1) * 100).round(1)
-
         if 'this_month_index' in locals() and 'last_month_index' in locals():
             filtered_df_fact[f'{prefix}diff_{this_month}_{last_month}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, last_month_index] - 1) * 100).round(1)
         # if thismonth_lastyear and 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
@@ -317,18 +281,6 @@ def causal_analysis(df, timestamp=1):
                 last_month_index = i
             elif thismonth_lastyear and col == f'{prefix}{thismonth_lastyear}':
                 thismonth_lastyear_index = i
-
-        # if 'this_month_index' in locals() and 'last_month_index' in locals():
-        #     df[f'{prefix}diff_{this_month}_{last_month}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, last_month_index] - 1) * 100).round(1)
-        # # if thismonth_lastyear and 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-        # if 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-        #     df[f'{prefix}diff_{this_month}_{thismonth_lastyear}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, thismonth_lastyear_index] - 1) * 100).round(1)
-
-        # if 'this_month_index' in locals() and 'last_month_index' in locals():
-        #     filtered_df_fact[f'{prefix}diff_{this_month}_{last_month}'] = (filtered_df.iloc[:, this_month_index] - filtered_df.iloc[:, last_month_index]).round(1)
-        # # if thismonth_lastyear and 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-        # if 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-        #     filtered_df_fact[f'{prefix}diff_{this_month}_{thismonth_lastyear}'] = (filtered_df.iloc[:, this_month_index] - filtered_df.iloc[:, thismonth_lastyear_index]).round(1)
         
         if 'this_month_index' in locals() and 'last_month_index' in locals():
             this_month_col = filtered_df.iloc[:, this_month_index]
@@ -369,30 +321,9 @@ def causal_analysis(df, timestamp=1):
         elif thismonth_lastyear and col == f'{prefix}{thismonth_lastyear}':
             thismonth_lastyear_index = i
 
-    # if 'this_month_index' in locals() and 'last_month_index' in locals():
-    #     df[f'{prefix}diff_{this_month}_{last_month}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, last_month_index] - 1) * 100).round(1)
-    # # if thismonth_lastyear and 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-    # if 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-    #     df[f'{prefix}diff_{this_month}_{thismonth_lastyear}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, thismonth_lastyear_index] - 1) * 100).round(1)
-
-  
-    # if 'this_month_index' in locals() and 'last_month_index' in locals():
-    #     filtered_df_fact[f'{prefix}diff_{this_month}_{last_month}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, last_month_index] - 1) * 100).round(1)
-    # # if thismonth_lastyear and 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-    # if 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
-    #     filtered_df_fact[f'{prefix}diff_{this_month}_{thismonth_lastyear}'] = ((filtered_df.iloc[:, this_month_index] / filtered_df.iloc[:, thismonth_lastyear_index] - 1) * 100).round(1)
-    
-
-
     if 'this_month_index' in locals() and 'last_month_index' in locals():
         this_month_col = filtered_df.iloc[:, this_month_index]
         last_month_col = filtered_df.iloc[:, last_month_index]
-
-        # # 문자열인 경우 쉼표 제거 후 숫자형으로 변환
-        # if isinstance(this_month_col.iloc[0], str):
-        #     this_month_col = this_month_col.str.replace(',', '')
-        # if isinstance(last_month_col.iloc[0], str):
-        #     last_month_col = last_month_col.str.replace(',', '')
 
         this_month_col = this_month_col.str.replace(',', '')
         last_month_col = last_month_col.str.replace(',', '')
@@ -404,13 +335,7 @@ def causal_analysis(df, timestamp=1):
 
     if 'this_month_index' in locals() and 'thismonth_lastyear_index' in locals():
         this_month_col = filtered_df.iloc[:, this_month_index]
-        last_year_col = filtered_df.iloc[:, thismonth_lastyear_index]
-
-        # # 문자열인 경우 쉼표 제거 후 숫자형으로 변환
-        # if isinstance(this_month_col.iloc[0], str):
-        #     this_month_col = this_month_col.str.replace(',', '')
-        # if isinstance(last_year_col.iloc[0], str):
-        #     last_year_col = last_year_col.str.replace(',', '')       
+        last_year_col = filtered_df.iloc[:, thismonth_lastyear_index]  
         
         this_month_col = this_month_col.str.replace(',', '')
         last_year_col = last_year_col.str.replace(',', '')
