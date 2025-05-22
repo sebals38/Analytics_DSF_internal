@@ -15,6 +15,8 @@ Here are the categoriy dashboards available:
 - [ ] [I&R](/I&R_withDB)
 - [ ] [CM](/CM_withDB)
 - [ ] [Capsule](/Capsule_withDB)
-- [ ] [PC](/PC_withDB)
 """
 )
+
+
+# - [ ] [PC](/PC_withDB)
